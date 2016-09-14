@@ -124,7 +124,9 @@ def odata(context, data_dict):
     except t.ObjectNotFound:
         t.abort(404, t._('DataStore resource not found'))
     except t.NotAuthorized:
-        t.abort(401, t._('DataStore resource not authourized'))
+        t.abort(401, t._('DataStore resource not authorized'))
+    except t.ValidationError:
+        t.abort(408, t._('DataStore resource database request timed out'))
     
     
     if not t.request.GET.get('$sqlfilter'):
@@ -137,7 +139,14 @@ def odata(context, data_dict):
         next_query_string = None
 
     action = t.get_action('resource_show')
-    resource = action({}, {'id': resource_id})
+    try:
+        resource = action({}, {'id': resource_id})
+    except t.ObjectNotFound:
+        t.abort(404, t._('DataStore resource not found'))
+    except t.NotAuthorized:
+        t.abort(401, t._('DataStore resource not authorized'))
+    except t.ValidationError:
+        t.abort(408, t._('DataStore resource database request timed out'))
 
     if output_json:
         out = OrderedDict()
